@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EcoCycle — E-Waste Management Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Barlow+Condensed:ital,wght@0,300;0,600;0,700;0,800;1,600&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0e0b08; --surface:#181310; --surface2:#221c17; --surface3:#2e251d;
+  --accent:#f5a623; --accent2:#e8450a; --accent3:#ffd166;
+  --teal:#2ec4b6; --cream:#f0e6d3;
+  --muted:#7a6a58; --muted2:#5a4d3e;
+  --border:rgba(245,166,35,0.18); --border2:rgba(245,166,35,0.08);
+  --red:#ff4757; --text:#ede0cc;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;overflow-x:hidden;cursor:none;}
+
+.cursor{width:10px;height:10px;background:var(--accent);border-radius:50%;position:fixed;pointer-events:none;z-index:9999;mix-blend-mode:difference;transition:transform .1s;}
+.cursor-ring{width:34px;height:34px;border:1px solid var(--accent);border-radius:50%;position:fixed;pointer-events:none;z-index:9998;transition:all .15s ease;opacity:.4;}
+
+body::before{content:'';position:fixed;inset:0;background-image:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(245,166,35,0.01) 2px,rgba(245,166,35,0.01) 4px),url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:9997;}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:500;display:flex;align-items:center;justify-content:space-between;padding:18px 52px;background:rgba(14,11,8,.93);backdrop-filter:blur(28px);border-bottom:1px solid var(--border);}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:3px;color:var(--accent);display:flex;align-items:center;gap:10px;text-shadow:0 0 24px rgba(245,166,35,.45);}
+.logo-icon{width:32px;height:32px;border:2px solid var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;animation:spin 9s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.nav-links{display:flex;gap:26px;}
+.nav-links a{color:var(--muted);text-decoration:none;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;transition:color .2s;}
+.nav-links a:hover{color:var(--accent);}
+.nav-cta{background:transparent;color:var(--accent);border:1px solid var(--accent);padding:8px 22px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:2px;cursor:none;transition:all .2s;text-transform:uppercase;}
+.nav-cta:hover{background:var(--accent);color:#0e0b08;box-shadow:0 0 24px rgba(245,166,35,.4);}
+
+.hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:120px 52px 80px;position:relative;overflow:hidden;}
+.hero-bg-grid{position:absolute;inset:0;background-image:linear-gradient(var(--border2) 1px,transparent 1px),linear-gradient(90deg,var(--border2) 1px,transparent 1px);background-size:72px 72px;opacity:.55;}
+.hero-orb{position:absolute;width:750px;height:750px;background:radial-gradient(circle,rgba(245,166,35,.06) 0%,transparent 65%);border-radius:50%;top:-180px;right:-180px;animation:pulse 8s ease-in-out infinite;}
+.hero-orb2{position:absolute;width:450px;height:450px;background:radial-gradient(circle,rgba(232,69,10,.05) 0%,transparent 70%);border-radius:50%;bottom:0;left:80px;animation:pulse 10s ease-in-out infinite reverse;}
+@keyframes pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.08);}}
+
+.hero-tag{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--accent);margin-bottom:20px;display:flex;align-items:center;gap:12px;animation:fadeUp .8s ease both;}
+.hero-tag::before{content:'';display:block;width:40px;height:1px;background:var(--accent);}
+.hero-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(60px,10vw,130px);line-height:.92;letter-spacing:3px;margin-bottom:28px;max-width:900px;animation:fadeUp .8s .1s ease both;text-transform:uppercase;}
+.hero-title em{font-style:normal;color:var(--accent);display:block;font-size:1.05em;text-shadow:0 0 50px rgba(245,166,35,.5),0 0 100px rgba(245,166,35,.2);}
+.hero-desc{font-size:13px;color:var(--muted);max-width:460px;line-height:1.9;margin-bottom:44px;animation:fadeUp .8s .2s ease both;}
+.hero-actions{display:flex;gap:14px;align-items:center;flex-wrap:wrap;animation:fadeUp .8s .3s ease both;}
+
+.btn-primary{background:var(--accent);color:#0e0b08;border:1px solid var(--accent);padding:14px 34px;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:13px;cursor:none;letter-spacing:2px;text-transform:uppercase;transition:all .25s;}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(245,166,35,.4);}
+.btn-outline{background:transparent;color:var(--text);border:1px solid rgba(245,166,35,.3);padding:14px 34px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;cursor:none;letter-spacing:2px;text-transform:uppercase;transition:all .25s;}
+.btn-outline:hover{border-color:var(--accent);color:var(--accent);}
+
+.hero-stats{position:absolute;right:52px;bottom:80px;display:flex;flex-direction:column;gap:24px;animation:fadeUp .8s .4s ease both;}
+.stat-item{text-align:right;}
+.stat-num{font-family:'Bebas Neue',sans-serif;font-size:42px;color:var(--accent);line-height:1;text-shadow:0 0 24px rgba(245,166,35,.4);}
+.stat-label{font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:3px;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(28px);}to{opacity:1;transform:translateY(0);}}
+
+.ticker{background:var(--surface);color:var(--accent);padding:10px 0;overflow:hidden;white-space:nowrap;border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
+.ticker-inner{display:inline-flex;gap:52px;animation:ticker 22s linear infinite;}
+.ticker-item{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;letter-spacing:2px;text-transform:uppercase;display:flex;align-items:center;gap:10px;}
+@keyframes ticker{to{transform:translateX(-50%);}}
+
+section{padding:96px 52px;}
+.section-label{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--accent);margin-bottom:14px;}
+.section-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(36px,5vw,68px);letter-spacing:2px;line-height:1;margin-bottom:20px;text-transform:uppercase;}
+
+/* HOW IT WORKS */
+.how-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;margin-top:60px;border:1px solid var(--border);}
+.how-card{background:var(--surface);padding:40px 30px;position:relative;overflow:hidden;transition:background .3s;}
+.how-card:hover{background:var(--surface2);}
+.how-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:0;transition:opacity .3s;}
+.how-card:hover::before{opacity:1;}
+.card-num{font-family:'Bebas Neue',sans-serif;font-size:72px;color:rgba(245,166,35,.05);position:absolute;top:10px;right:16px;line-height:1;}
+.card-icon{font-size:28px;margin-bottom:14px;display:block;}
+.card-title{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;margin-bottom:10px;color:var(--text);letter-spacing:1.5px;text-transform:uppercase;}
+.card-desc{font-size:11px;color:var(--muted);line-height:1.9;}
+
+/* HAZARD */
+.hazard-section{background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
+.hazard-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:56px;}
+.hazard-card{border:1px solid var(--border);padding:26px 22px;background:var(--bg);transition:all .3s;cursor:none;}
+.hazard-card:hover{border-color:var(--accent2);background:var(--surface2);}
+.hazard-level{display:inline-flex;align-items:center;gap:6px;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:4px 10px;margin-bottom:14px;font-family:'Barlow Condensed',sans-serif;}
+.level-high{background:rgba(232,69,10,.15);color:var(--accent2);border:1px solid rgba(232,69,10,.35);}
+.level-med{background:rgba(245,166,35,.12);color:var(--accent);border:1px solid rgba(245,166,35,.3);}
+.level-low{background:rgba(46,196,182,.1);color:var(--teal);border:1px solid rgba(46,196,182,.3);}
+.hazard-device{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;margin-bottom:8px;color:var(--text);}
+.hazard-toxins{font-size:11px;color:var(--muted);line-height:1.7;margin-bottom:14px;}
+.hazard-bar-wrap{margin-top:10px;}
+.hazard-bar-label{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--muted2);margin-bottom:4px;display:flex;justify-content:space-between;}
+.hazard-bar{height:3px;background:var(--surface3);margin-bottom:7px;}
+.hazard-bar-fill{height:100%;background:linear-gradient(90deg,var(--teal),#2ec4b6);transition:width 1.2s ease;width:0;}
+.hazard-bar-fill.amber{background:linear-gradient(90deg,#a06800,var(--accent));}
+.hazard-bar-fill.red{background:linear-gradient(90deg,#8b1a00,var(--accent2));}
+
+/* CALCULATOR */
+.calculator-section{background:var(--bg);}
+.calc-container{display:grid;grid-template-columns:1fr 1fr;gap:1px;margin-top:56px;background:var(--border);border:1px solid var(--border);}
+.calc-panel{padding:48px;background:var(--bg);}
+.calc-panel:first-child{background:var(--surface);}
+.calc-title{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text);margin-bottom:8px;}
+.calc-sub{font-size:11px;color:var(--muted);line-height:1.8;margin-bottom:26px;}
+.device-picker{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:26px;}
+.device-btn{display:flex;align-items:center;gap:8px;padding:11px 13px;border:1px solid var(--border);background:var(--bg);color:var(--muted);font-family:'DM Mono',monospace;font-size:10px;cursor:none;transition:all .2s;}
+.device-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--surface2);}
+.device-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(245,166,35,.07);}
+.device-btn .d-icon{font-size:16px;}
+.qty-row{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+.qty-label{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);min-width:88px;}
+.qty-ctrl{display:flex;align-items:center;border:1px solid var(--border);}
+.qty-btn{width:32px;height:32px;background:var(--surface2);border:none;color:var(--accent);font-size:18px;cursor:none;display:flex;align-items:center;justify-content:center;transition:background .2s;line-height:1;font-family:monospace;}
+.qty-btn:hover{background:var(--surface3);}
+.qty-num{width:44px;height:32px;background:var(--bg);color:var(--text);font-family:'Bebas Neue',sans-serif;font-size:16px;display:flex;align-items:center;justify-content:center;border-left:1px solid var(--border);border-right:1px solid var(--border);}
+.calc-result-panel{display:flex;flex-direction:column;justify-content:center;gap:16px;}
+.result-metric{padding:18px 22px;border:1px solid var(--border);background:var(--surface2);position:relative;overflow:hidden;}
+.result-metric::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent);}
+.result-metric.co2::before{background:var(--accent2);}
+.result-metric.water::before{background:var(--teal);}
+.metric-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:5px;}
+.metric-value{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--accent);line-height:1;}
+.metric-value.co2{color:var(--accent2);}
+.metric-value.water{color:var(--teal);}
+.metric-unit{font-size:10px;color:var(--muted);margin-top:3px;}
+
+/* DATA WIPE */
+.datawipe-section{background:var(--surface);border-top:1px solid var(--border);}
+.datawipe-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;margin-top:56px;background:var(--border);border:1px solid var(--border);}
+.wipe-panel{background:var(--bg);padding:48px;}
+.wipe-panel:last-child{background:var(--surface);}
+.form-group{margin-bottom:15px;}
+.form-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:7px;display:block;}
+.form-input,.form-select{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:10px 13px;font-family:'DM Mono',monospace;font-size:11px;outline:none;transition:border-color .2s;appearance:none;}
+.form-input:focus,.form-select:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(245,166,35,.08);}
+option{background:var(--bg);}
+.wipe-features{display:flex;flex-direction:column;gap:14px;margin-top:8px;}
+.wipe-feature{display:flex;gap:14px;align-items:flex-start;padding:16px 18px;border:1px solid var(--border);background:var(--surface2);transition:all .3s;}
+.wipe-feature:hover{border-color:var(--accent);}
+.wipe-feat-icon{font-size:20px;min-width:28px;}
+.wipe-feat-title{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px;}
+.wipe-feat-desc{font-size:10px;color:var(--muted);line-height:1.7;}
+.cert-preview{margin-top:22px;padding:26px;border:1px solid var(--accent);background:rgba(245,166,35,.03);display:none;}
+.cert-preview.visible{display:block;animation:fadeUp .4s ease;}
+.cert-header{display:flex;align-items:center;gap:12px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border);}
+.cert-seal{width:42px;height:42px;border:2px solid var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.cert-title-text{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:var(--accent);letter-spacing:1px;}
+.cert-subtitle{font-size:9px;color:var(--muted);margin-top:2px;}
+.cert-rows{display:flex;flex-direction:column;gap:7px;}
+.cert-row{display:flex;justify-content:space-between;font-size:11px;}
+.cert-row-label{color:var(--muted);}
+.cert-row-val{color:var(--text);font-weight:700;}
+
+/* CATEGORIES */
+.categories-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:60px;}
+.cat-card{border:1px solid var(--border);padding:22px 16px;text-align:center;transition:all .25s;background:var(--surface);cursor:none;}
+.cat-card:hover{border-color:rgba(245,166,35,.5);background:var(--surface2);box-shadow:0 0 32px rgba(245,166,35,.06);}
+.cat-icon{font-size:28px;margin-bottom:10px;display:block;}
+.cat-name{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;margin-bottom:4px;letter-spacing:1px;text-transform:uppercase;}
+.cat-count{font-size:10px;color:var(--muted);}
+.cat-bar{margin-top:12px;height:1px;background:var(--surface3);overflow:hidden;}
+.cat-bar-fill{height:100%;background:linear-gradient(90deg,#8b5a00,var(--accent));transition:width 1s ease;}
+
+/* CIRCULAR */
+.diagram-section{background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
+.diagram-wrapper{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;margin-top:60px;}
+.circular-diagram{position:relative;width:380px;height:380px;margin:0 auto;}
+.circular-diagram svg{width:100%;height:100%;animation:rotateSlow 24s linear infinite;}
+@keyframes rotateSlow{to{transform:rotate(360deg);}}
+.diagram-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;}
+.diagram-center .big{font-family:'Bebas Neue',sans-serif;font-size:44px;color:var(--accent);line-height:1;}
+.diagram-center .small{font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;}
+.cycle-steps{display:flex;flex-direction:column;gap:16px;}
+.cycle-step{display:flex;gap:18px;align-items:flex-start;padding:18px 20px;border:1px solid var(--border);transition:all .3s;}
+.cycle-step:hover{border-color:var(--accent);background:var(--surface2);}
+.cycle-step-num{font-family:'Bebas Neue',sans-serif;font-size:14px;color:var(--accent);letter-spacing:1px;min-width:32px;padding-top:1px;}
+.cycle-step-content h4{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;margin-bottom:4px;}
+.cycle-step-content p{font-size:11px;color:var(--muted);line-height:1.7;}
+
+/* ACTION */
+.action-section{background:var(--surface);border-top:1px solid var(--border);}
+.action-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;margin-top:60px;background:var(--border);border:1px solid var(--border);}
+.action-panel{background:var(--bg);padding:48px;}
+.action-panel h3{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;margin-bottom:8px;letter-spacing:1.5px;text-transform:uppercase;}
+.action-panel p{font-size:11px;color:var(--muted);margin-bottom:26px;line-height:1.9;}
+.drop-zone{border:1px dashed rgba(245,166,35,.3);padding:36px;text-align:center;transition:all .3s;cursor:none;}
+.drop-zone:hover{border-color:var(--accent);background:rgba(245,166,35,.03);}
+.drop-icon{font-size:32px;margin-bottom:9px;}
+.drop-text{font-size:11px;color:var(--muted);}
+.drop-text span{color:var(--accent);}
+.result-box{margin-top:16px;padding:14px;background:var(--surface2);border:1px solid var(--border);font-size:11px;color:var(--muted);min-height:80px;display:flex;align-items:center;justify-content:center;text-align:center;}
+
+/* MARKET */
+.market-section{background:var(--bg);border-top:1px solid var(--border);}
+.market-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:56px;}
+.market-card{border:1px solid var(--border);padding:22px 18px;background:var(--surface);transition:all .3s;}
+.market-card:hover{border-color:var(--accent);background:var(--surface2);}
+.market-material{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:var(--text);margin-bottom:2px;}
+.market-symbol{font-size:9px;color:var(--muted);letter-spacing:1.5px;margin-bottom:14px;}
+.market-price{font-family:'Bebas Neue',sans-serif;font-size:26px;line-height:1;margin-bottom:4px;}
+.market-unit{font-size:9px;color:var(--muted);letter-spacing:1px;margin-bottom:12px;}
+.market-change{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:3px 8px;}
+.change-up{background:rgba(46,196,182,.1);color:var(--teal);}
+.change-down{background:rgba(255,71,87,.1);color:var(--red);}
+.market-sparkline{margin-top:14px;}
+.market-sparkline svg{width:100%;height:36px;}
+
+/* IMPACT */
+.impact-section{background:var(--surface);text-align:center;border-top:1px solid var(--border);}
+.impact-counters{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-top:60px;border:1px solid var(--border);}
+.counter-cell{padding:52px 24px;border-right:1px solid var(--border);position:relative;overflow:hidden;}
+.counter-cell:last-child{border-right:none;}
+.counter-cell::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--accent),transparent);transform:translateX(-100%);animation:scanLine 3s linear infinite;}
+@keyframes scanLine{to{transform:translateX(100%);}}
+.counter-value{font-family:'Bebas Neue',sans-serif;font-size:52px;color:var(--accent);line-height:1;margin-bottom:8px;text-shadow:0 0 32px rgba(245,166,35,.35);}
+.counter-label{font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;}
+
+/* MAP */
+.map-section{background:var(--bg);border-top:1px solid var(--border);}
+.map-container{margin-top:44px;border:1px solid var(--border);overflow:hidden;}
+.map-placeholder{height:380px;background:var(--surface2);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+.map-dots{position:absolute;inset:0;}
+.location-dot{position:absolute;width:12px;height:12px;background:var(--accent);border-radius:50%;transform:translate(-50%,-50%);animation:ripple 2s ease-out infinite;}
+.location-dot:nth-child(2){animation-delay:.4s}.location-dot:nth-child(3){animation-delay:.8s}.location-dot:nth-child(4){animation-delay:1.2s}.location-dot:nth-child(5){animation-delay:1.6s}
+@keyframes ripple{0%{box-shadow:0 0 0 0 rgba(245,166,35,.5);}70%{box-shadow:0 0 0 22px rgba(245,166,35,0);}100%{box-shadow:0 0 0 0 rgba(245,166,35,0);}}
+.map-label{position:absolute;font-size:9px;color:var(--text);white-space:nowrap;margin-top:16px;transform:translateX(-50%);text-align:center;}
+.map-info-bar{display:flex;align-items:center;justify-content:space-between;padding:14px 22px;background:var(--surface);border-top:1px solid var(--border);}
+.map-info-item{font-size:11px;color:var(--muted);}
+.map-info-item span{color:var(--accent);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;}
+
+/* FOOTER */
+footer{padding:60px 52px;border-top:1px solid var(--border);display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:48px;}
+.footer-brand .logo{margin-bottom:14px;}
+.footer-brand p{font-size:11px;color:var(--muted);line-height:1.8;max-width:280px;}
+.footer-col h4{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;margin-bottom:16px;color:var(--text);letter-spacing:2px;text-transform:uppercase;}
+.footer-col a{display:block;font-size:11px;color:var(--muted);text-decoration:none;margin-bottom:8px;transition:color .2s;}
+.footer-col a:hover{color:var(--accent);}
+.footer-bottom{padding:16px 52px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.footer-bottom span{font-size:10px;color:var(--muted);}
+
+/* NOTIFICATION */
+.notification{position:fixed;bottom:24px;right:24px;background:var(--surface2);border:1px solid rgba(245,166,35,.4);border-left:2px solid var(--accent);box-shadow:0 8px 32px rgba(245,166,35,.1);padding:16px 20px;font-size:11px;color:var(--text);z-index:1000;transform:translateY(100px);opacity:0;transition:all .4s ease;max-width:320px;}
+.notification.show{transform:translateY(0);opacity:1;}
+.notif-title{font-family:'Barlow Condensed',sans-serif;font-weight:700;color:var(--accent);margin-bottom:4px;font-size:13px;letter-spacing:1px;text-transform:uppercase;}
+.notif-msg{color:var(--muted);font-size:10px;}
+
+.progress-wrap{margin-top:14px;display:none;}
+.progress-bar{height:2px;background:var(--surface2);}
+.progress-fill{height:100%;width:0%;background:var(--accent);transition:width .1s linear;}
+.progress-label{font-size:10px;color:var(--muted);margin-top:7px;}
+
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--muted2);}
+
+@media(max-width:1100px){
+  nav{padding:16px 24px;}.nav-links{display:none;}
+  section{padding:64px 24px;}.hero{padding:100px 24px 64px;}
+  .how-grid{grid-template-columns:1fr;}.categories-grid{grid-template-columns:repeat(2,1fr);}
+  .action-grid,.datawipe-grid,.calc-container{grid-template-columns:1fr;}
+  .impact-counters{grid-template-columns:repeat(2,1fr);}
+  .counter-cell{border-right:none;border-bottom:1px solid var(--border);}
+  .diagram-wrapper{grid-template-columns:1fr;}.circular-diagram{width:280px;height:280px;}
+  footer{grid-template-columns:1fr 1fr;}
+  .hero-stats{position:static;flex-direction:row;gap:32px;margin-top:48px;}.stat-item{text-align:left;}
+  .hazard-grid{grid-template-columns:1fr;}.market-grid{grid-template-columns:repeat(2,1fr);}
+}
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<nav>
+  <div class="logo"><div class="logo-icon">♻</div>EcoCycle</div>
+  <div class="nav-links">
+    <a href="#how">How It Works</a>
+    <a href="#hazard">Hazard Guide</a>
+    <a href="#calculator">CO₂ Calc</a>
+    <a href="#categories">E-Waste Types</a>
+    <a href="#schedule">Schedule</a>
+    <a href="#market">Materials</a>
+    <a href="#impact">Impact</a>
+    <a href="#centers">Centers</a>
+  </div>
+  <button class="nav-cta" onclick="scrollToSection('schedule')">Schedule Pickup</button>
+</nav>
+
+<section class="hero" id="home">
+  <div class="hero-bg-grid"></div>
+  <div class="hero-orb"></div>
+  <div class="hero-orb2"></div>
+  <div class="hero-tag">Circular Economy Platform — Pune / Pimpri-Chinchwad</div>
+  <h1 class="hero-title">E-Waste<br><em>Reimagined</em><br>for Earth</h1>
+  <p class="hero-desc">Collect, segregate, and recycle electronic waste intelligently. Every device recycled becomes a resource — closing the loop on the circular economy of e-waste.</p>
+  <div class="hero-actions">
+    <button class="btn-primary" onclick="scrollToSection('schedule')">Schedule Pickup</button>
+    <button class="btn-outline" onclick="scrollToSection('calculator')">Calculate Impact</button>
+    <button class="btn-outline" onclick="scrollToSection('hazard')">Hazard Guide</button>
+  </div>
+  <div class="hero-stats">
+    <div class="stat-item"><div class="stat-num" id="heroStat1">0</div><div class="stat-label">Tons Collected</div></div>
+    <div class="stat-item"><div class="stat-num" id="heroStat2">0</div><div class="stat-label">Devices Recycled</div></div>
+    <div class="stat-item"><div class="stat-num" id="heroStat3">0</div><div class="stat-label">Collection Centers</div></div>
+  </div>
+</section>
+
+<div class="ticker">
+  <div class="ticker-inner">
+    <span class="ticker-item">♻ Smartphones</span><span class="ticker-item">⚡ Laptops</span><span class="ticker-item">🖨 Printers</span><span class="ticker-item">📺 Televisions</span><span class="ticker-item">🔋 Batteries</span><span class="ticker-item">💡 LED Lights</span><span class="ticker-item">🖥 Monitors</span><span class="ticker-item">⌨ Keyboards</span><span class="ticker-item">📷 Cameras</span><span class="ticker-item">🎮 Gaming Devices</span>
+    <span class="ticker-item">♻ Smartphones</span><span class="ticker-item">⚡ Laptops</span><span class="ticker-item">🖨 Printers</span><span class="ticker-item">📺 Televisions</span><span class="ticker-item">🔋 Batteries</span><span class="ticker-item">💡 LED Lights</span><span class="ticker-item">🖥 Monitors</span><span class="ticker-item">⌨ Keyboards</span><span class="ticker-item">📷 Cameras</span><span class="ticker-item">🎮 Gaming Devices</span>
+  </div>
+</div>
+
+<section id="how">
+  <div class="section-label">Process</div>
+  <h2 class="section-title">How EcoCycle<br>Works</h2>
+  <div class="how-grid">
+    <div class="how-card"><span class="card-num">01</span><span class="card-icon">📦</span><div class="card-title">Collection</div><p class="card-desc">Schedule doorstep pickup or drop off at certified centers across Pune–Pimpri-Chinchwad. We handle all device types — from old phones to industrial equipment.</p></div>
+    <div class="how-card"><span class="card-num">02</span><span class="card-icon">🔍</span><div class="card-title">Smart Segregation</div><p class="card-desc">ML-powered scanning classifies devices by type, hazard level, and recyclability. Items are sorted into safe processing streams automatically.</p></div>
+    <div class="how-card"><span class="card-num">03</span><span class="card-icon">⚙️</span><div class="card-title">Processing</div><p class="card-desc">Certified technicians dismantle devices, extract valuable materials (gold, copper, lithium), and safely neutralize hazardous components like mercury and lead.</p></div>
+    <div class="how-card"><span class="card-num">04</span><span class="card-icon">🔒</span><div class="card-title">Data Wipe</div><p class="card-desc">DoD-grade data destruction ensures complete erasure of all personal information before dismantling. You receive a certified data wipe certificate.</p></div>
+    <div class="how-card"><span class="card-num">05</span><span class="card-icon">📊</span><div class="card-title">ESG Reporting</div><p class="card-desc">Receive digital certificates of responsible disposal with full audit trails — perfect for corporate ESG compliance, CPCB reporting, and sustainability goals.</p></div>
+    <div class="how-card"><span class="card-num">06</span><span class="card-icon">🔄</span><div class="card-title">Circular Re-entry</div><p class="card-desc">Recovered materials re-enter manufacturing supply chains. Functional components are refurbished and redistributed — extending product life by 3–7 years.</p></div>
+  </div>
+</section>
+
+<section class="hazard-section" id="hazard">
+  <div class="section-label">Safety & Environment</div>
+  <h2 class="section-title">E-Waste Toxin<br>Hazard Guide</h2>
+  <p style="color:var(--muted);font-size:12px;max-width:520px;line-height:1.9;margin-top:6px">Most electronic devices contain toxic substances that leach into soil and water when improperly discarded. Know your device's hazard level before disposal.</p>
+  <div class="hazard-grid">
+    <div class="hazard-card">
+      <span class="hazard-level level-high">⚠ HIGH RISK</span>
+      <div class="hazard-device">📱 Smartphones & Tablets</div>
+      <div class="hazard-toxins">Contains: <strong>Lead</strong> (solder), <strong>Cadmium</strong> (batteries), <strong>Arsenic</strong> (semiconductors), <strong>Brominated flame retardants</strong></div>
+      <div class="hazard-bar-wrap">
+        <div class="hazard-bar-label"><span>Lead</span><span>78%</span></div>
+        <div class="hazard-bar"><div class="hazard-bar-fill red" data-w="78"></div></div>
+        <div class="hazard-bar-label"><span>Cadmium</span><span>54%</span></div>
+        <div class="hazard-bar"><div class="hazard-bar-fill red" data-w="54"></div></div>
+      </div>
+    </div>
+    <div class="hazard-card">
+      <span class="hazard-level level-high">⚠ HIGH RISK</span>
+      <div class="hazard-device">🖥 CRT Monitors & TVs</div>
+      <div class="hazard-toxins">Contains: <strong>Lead oxide</strong> (up to 8 lbs per unit), <strong>Barium</strong>, <strong>Phosphor compounds</strong>, <strong>Mercury</strong> in backlights</div>
+      <div class="hazard-bar-wrap">
+        <div class="hazard-bar-label"><span>Lead oxide</span><span>92%</span></div>
+        <div class="hazard-bar"><div class="hazard-bar-fill red" data-w="92"></div></div>
+        <div class="hazard-bar-label"><span>Mercury</span><span>61%</span></div>
+        <div class="hazard-bar"><div class="hazard-bar-fill red" data-w="61"></div></div>
+      </div>
+    </div>
+    <div class="hazard-card">
+      <span class="hazard-level level-med">◈ MEDIUM RISK</span>
+      <div class="hazard-device">💻 Laptops & Notebooks</div>
+      <div class="hazard-toxins">Contains: <strong>Lithium</strong> (batteries — fire risk), <strong>Beryllium</strong> (connectors), <strong>Tin/Lead solder</strong>, <strong>Chromium VI</strong></div>
+      <div class="hazard-bar-wrap">
+        <div class="hazard-bar-label"><span>Lithium</span><span>65%</span></div>
+        <div class="hazard-bar"><div class="hazard-bar-fill amber" data-w="65"></div></div>
+        <div class="hazard-bar-label"><span>Beryllium</span><span>38%</span></div>
+        <div class="hazard-bar"><div class="hazard-bar-fill amber" data-w="38"></div></div>
+      </div>
+    </div>
+    <div class="hazard-card">
+      <span class="hazard-level level-med">◈ MEDIUM RISK</span>
+      <div class="hazard-device">🖨 Printers & Toner</div>
+      <div class="hazard-toxins">Contains: <strong>Toner particles</strong> (respiratory hazard), <strong>Selenium drums</strong>, <strong>Cadmium</strong> in ink cartridges</div>
+      <div class="hazard-bar-wrap">
+        <div class="hazard-bar-label"><span>Toner PM2.5</span><span>48%</span></div>
+        <div class="hazard-bar"><div class="hazard-bar-fill amber" data-w="48"></div></div>
+        <div class="hazard-bar-label"><span>Selenium</span><span>29%</span></div>
+        <div class="hazard-bar"><div class="hazard-bar-fill amber" data-w="29"></div></div>
+      </div>
+    </div>
+    <div class="hazard-card">
+      <span class="hazard-level level-high">⚠ HIGH RISK</span>
+      <div class="hazard-device">🔋 Batteries (All Types)</div>
+      <div class="hazard-toxins">Contains: <strong>Sulfuric acid</strong> (lead-acid), <strong>Cobalt</strong> (Li-ion), <strong>Nickel</strong>, <strong>Mercury</strong> (button cells — now banned)</div>
+      <div class="hazard-bar-wrap">
+        <div class="hazard-bar-label"><span>Acid/Alkali</span><span>85%</span></div>
+        <div class="hazard-bar"><div class="hazard-bar-fill red" data-w="85"></div></div>
+        <div class="hazard-bar-label"><span>Cobalt</span><span>52%</span></div>
+        <div class="hazard-bar"><div class="hazard-bar-fill red" data-w="52"></div></div>
+      </div>
+    </div>
+    <div class="hazard-card">
+      <span class="hazard-level level-low">✓ LOWER RISK</span>
+      <div class="hazard-device">⌨ Keyboards & Peripherals</div>
+      <div class="hazard-toxins">Contains: <strong>PVC plastics</strong> (dioxin when burned), <strong>Trace copper</strong>, minimal toxic metals — but still must NOT go to landfill</div>
+      <div class="hazard-bar-wrap">
+        <div class="hazard-bar-label"><span>PVC</span><span>32%</span></div>
+        <div class="hazard-bar"><div class="hazard-bar-fill" data-w="32"></div></div>
+        <div class="hazard-bar-label"><span>Copper</span><span>18%</span></div>
+        <div class="hazard-bar"><div class="hazard-bar-fill" data-w="18"></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="calculator-section" id="calculator">
+  <div class="section-label">Environmental Impact</div>
+  <h2 class="section-title">CO₂ Savings<br>Calculator</h2>
+  <p style="color:var(--muted);font-size:12px;max-width:500px;line-height:1.9;margin-top:6px">Calculate how much carbon, water, and landfill space you save by recycling your devices instead of discarding them.</p>
+  <div class="calc-container">
+    <div class="calc-panel">
+      <div class="calc-title">Select Devices to Recycle</div>
+      <p class="calc-sub">Choose device types and set quantities — we'll calculate your total environmental savings in real time.</p>
+      <div class="device-picker" id="devicePicker">
+        <button class="device-btn" data-device="smartphone" onclick="toggleDevice(this)"><span class="d-icon">📱</span>Smartphone</button>
+        <button class="device-btn" data-device="laptop" onclick="toggleDevice(this)"><span class="d-icon">💻</span>Laptop</button>
+        <button class="device-btn" data-device="monitor" onclick="toggleDevice(this)"><span class="d-icon">🖥</span>Monitor</button>
+        <button class="device-btn" data-device="printer" onclick="toggleDevice(this)"><span class="d-icon">🖨</span>Printer</button>
+        <button class="device-btn" data-device="battery" onclick="toggleDevice(this)"><span class="d-icon">🔋</span>Battery</button>
+        <button class="device-btn" data-device="tablet" onclick="toggleDevice(this)"><span class="d-icon">📟</span>Tablet</button>
+        <button class="device-btn" data-device="tv" onclick="toggleDevice(this)"><span class="d-icon">📺</span>TV / CRT</button>
+        <button class="device-btn" data-device="router" onclick="toggleDevice(this)"><span class="d-icon">📡</span>Router/Modem</button>
+      </div>
+      <div id="qtyRows"></div>
+    </div>
+    <div class="calc-panel">
+      <div class="calc-title">Your Impact Summary</div>
+      <p class="calc-sub">Estimated environmental savings if you recycle instead of landfill-disposing these devices.</p>
+      <div class="calc-result-panel">
+        <div class="result-metric"><div class="metric-label">CO₂ Emissions Prevented</div><div class="metric-value" id="calcCO2">0</div><div class="metric-unit">kg of CO₂ equivalent</div></div>
+        <div class="result-metric co2"><div class="metric-label">Energy Saved</div><div class="metric-value co2" id="calcEnergy">0</div><div class="metric-unit">kWh — powers a home for <span id="calcDays">0</span> days</div></div>
+        <div class="result-metric water"><div class="metric-label">Water Conserved</div><div class="metric-value water" id="calcWater">0</div><div class="metric-unit">litres saved from contamination</div></div>
+        <div class="result-metric"><div class="metric-label">Landfill Space Saved</div><div class="metric-value" id="calcLandfill">0</div><div class="metric-unit">kg kept out of landfill</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="datawipe-section" id="datawipe">
+  <div class="section-label">Data Security</div>
+  <h2 class="section-title">Certified Data<br>Destruction</h2>
+  <div class="datawipe-grid">
+    <div class="wipe-panel">
+      <p style="color:var(--muted);font-size:11px;line-height:1.9;margin-bottom:26px">Before any device is dismantled, we perform DoD 5220.22-M compliant data wiping. All drives are physically destroyed after wipe. Request your personalized certificate below.</p>
+      <div class="form-group"><label class="form-label">Your Full Name</label><input class="form-input" id="wipeNameInput" placeholder="e.g. Neel Patil"></div>
+      <div class="form-group"><label class="form-label">Device Serial / IMEI (optional)</label><input class="form-input" id="wipeSerialInput" placeholder="e.g. SN123456789"></div>
+      <div class="form-group"><label class="form-label">Device Type</label>
+        <select class="form-select" id="wipeDeviceInput">
+          <option value="">Select device type</option>
+          <option>Laptop / Notebook</option><option>Smartphone</option>
+          <option>Desktop PC</option><option>External Hard Drive</option>
+          <option>Tablet</option><option>Server / Storage Unit</option>
+        </select>
+      </div>
+      <button class="btn-primary" onclick="generateCert()" style="width:100%;margin-top:8px">Generate Certificate</button>
+      <div class="cert-preview" id="certPreview">
+        <div class="cert-header">
+          <div class="cert-seal">🛡</div>
+          <div><div class="cert-title-text">Data Destruction Certificate</div><div class="cert-subtitle">EcoCycle Certified — DoD 5220.22-M Standard</div></div>
+        </div>
+        <div class="cert-rows">
+          <div class="cert-row"><span class="cert-row-label">Certificate No.</span><span class="cert-row-val" id="certNum">—</span></div>
+          <div class="cert-row"><span class="cert-row-label">Issued To</span><span class="cert-row-val" id="certName">—</span></div>
+          <div class="cert-row"><span class="cert-row-label">Device</span><span class="cert-row-val" id="certDevice">—</span></div>
+          <div class="cert-row"><span class="cert-row-label">Serial / IMEI</span><span class="cert-row-val" id="certSerial">—</span></div>
+          <div class="cert-row"><span class="cert-row-label">Wipe Method</span><span class="cert-row-val">DoD 5220.22-M / 7-Pass</span></div>
+          <div class="cert-row"><span class="cert-row-label">Status</span><span class="cert-row-val" style="color:var(--accent)">✓ VERIFIED COMPLETE</span></div>
+          <div class="cert-row"><span class="cert-row-label">Date Issued</span><span class="cert-row-val" id="certDate">—</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="wipe-panel">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;letter-spacing:1px;margin-bottom:18px;text-transform:uppercase;">Why Data Wipe Matters</div>
+      <div class="wipe-features">
+        <div class="wipe-feature"><span class="wipe-feat-icon">🔐</span><div><div class="wipe-feat-title">Identity Theft Prevention</div><div class="wipe-feat-desc">Old devices contain banking credentials, passwords, and personal documents recoverable from even "deleted" drives without proper wiping.</div></div></div>
+        <div class="wipe-feature"><span class="wipe-feat-icon">🏢</span><div><div class="wipe-feat-title">GDPR / IT Act Compliance</div><div class="wipe-feat-desc">Organizations are legally required to certifiably destroy data under India's IT Act 2000 and global GDPR. Our certificates satisfy audit requirements.</div></div></div>
+        <div class="wipe-feature"><span class="wipe-feat-icon">⚡</span><div><div class="wipe-feat-title">Military-Grade Standard</div><div class="wipe-feat-desc">DoD 5220.22-M involves 7 overwrite passes making data forensically unrecoverable. Physical platter destruction follows for HDDs.</div></div></div>
+        <div class="wipe-feature"><span class="wipe-feat-icon">📋</span><div><div class="wipe-feat-title">Full Audit Chain</div><div class="wipe-feat-desc">Each certificate is logged in our blockchain-backed system, ensuring tamper-proof record keeping for your device's entire end-of-life journey.</div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="categories" style="background:var(--surface);border-top:1px solid var(--border)">
+  <div class="section-label">What We Accept</div>
+  <h2 class="section-title">E-Waste<br>Categories</h2>
+  <div class="categories-grid">
+    <div class="cat-card"><span class="cat-icon">📱</span><div class="cat-name">Mobile Devices</div><div class="cat-count">Phones, tablets, smartwatches</div><div class="cat-bar"><div class="cat-bar-fill" style="width:88%"></div></div></div>
+    <div class="cat-card"><span class="cat-icon">💻</span><div class="cat-name">Computers</div><div class="cat-count">Desktops, laptops, servers</div><div class="cat-bar"><div class="cat-bar-fill" style="width:76%"></div></div></div>
+    <div class="cat-card"><span class="cat-icon">📺</span><div class="cat-name">Displays</div><div class="cat-count">TVs, monitors, projectors</div><div class="cat-bar"><div class="cat-bar-fill" style="width:62%"></div></div></div>
+    <div class="cat-card"><span class="cat-icon">🔋</span><div class="cat-name">Batteries</div><div class="cat-count">All types, all sizes</div><div class="cat-bar"><div class="cat-bar-fill" style="width:94%"></div></div></div>
+    <div class="cat-card"><span class="cat-icon">🖨</span><div class="cat-name">Printers</div><div class="cat-count">Inkjet, laser, scanners</div><div class="cat-bar"><div class="cat-bar-fill" style="width:55%"></div></div></div>
+    <div class="cat-card"><span class="cat-icon">🎮</span><div class="cat-name">Gaming Gear</div><div class="cat-count">Consoles, controllers, VR</div><div class="cat-bar"><div class="cat-bar-fill" style="width:49%"></div></div></div>
+    <div class="cat-card"><span class="cat-icon">📡</span><div class="cat-name">Networking</div><div class="cat-count">Routers, modems, switches</div><div class="cat-bar"><div class="cat-bar-fill" style="width:41%"></div></div></div>
+    <div class="cat-card"><span class="cat-icon">💡</span><div class="cat-name">Lighting</div><div class="cat-count">CFLs, LEDs, fluorescents</div><div class="cat-bar"><div class="cat-bar-fill" style="width:67%"></div></div></div>
+  </div>
+</section>
+
+<section class="diagram-section" id="circular">
+  <div class="section-label">Circular Economy</div>
+  <h2 class="section-title">Closing the<br>E-Waste Loop</h2>
+  <p style="color:var(--muted);font-size:12px;max-width:480px;line-height:1.9;margin-top:6px">Unlike linear disposal, our circular model ensures every material has a second life — reducing landfill waste and virgin resource extraction.</p>
+  <div class="diagram-wrapper">
+    <div class="circular-diagram">
+      <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="200" cy="200" r="178" fill="none" stroke="rgba(245,166,35,0.1)" stroke-width="1" stroke-dasharray="6 4"/>
+        <path d="M200,22 A178,178 0 0,1 378,200" fill="none" stroke="#f5a623" stroke-width="3" stroke-linecap="round"/>
+        <path d="M378,200 A178,178 0 0,1 200,378" fill="none" stroke="#e8450a" stroke-width="3" stroke-linecap="round"/>
+        <path d="M200,378 A178,178 0 0,1 22,200" fill="none" stroke="#2ec4b6" stroke-width="3" stroke-linecap="round"/>
+        <path d="M22,200 A178,178 0 0,1 200,22" fill="none" stroke="#ffd166" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="200" cy="22" r="8" fill="#f5a623"/>
+        <circle cx="378" cy="200" r="8" fill="#e8450a"/>
+        <circle cx="200" cy="378" r="8" fill="#2ec4b6"/>
+        <circle cx="22" cy="200" r="8" fill="#ffd166"/>
+        <text x="200" y="9" fill="#f5a623" font-size="11" font-family="monospace" text-anchor="middle">COLLECT</text>
+        <text x="393" y="205" fill="#e8450a" font-size="11" font-family="monospace" text-anchor="start">SORT</text>
+        <text x="200" y="397" fill="#2ec4b6" font-size="11" font-family="monospace" text-anchor="middle">RECYCLE</text>
+        <text x="5" y="205" fill="#ffd166" font-size="11" font-family="monospace" text-anchor="start">RECOVER</text>
+        <circle cx="200" cy="200" r="78" fill="rgba(245,166,35,0.04)" stroke="rgba(245,166,35,0.18)" stroke-width="1"/>
+        <polygon points="376,192 384,200 376,208" fill="#e8450a"/>
+        <polygon points="208,376 200,384 192,376" fill="#2ec4b6"/>
+        <polygon points="24,208 16,200 24,192" fill="#ffd166"/>
+        <polygon points="192,24 200,16 208,24" fill="#f5a623"/>
+      </svg>
+      <div class="diagram-center"><div class="big">♻</div><div class="small" style="margin-top:4px">Zero Waste<br>Circular Loop</div></div>
+    </div>
+    <div class="cycle-steps">
+      <div class="cycle-step"><div class="cycle-step-num">01 ●</div><div class="cycle-step-content"><h4>Collection & Aggregation</h4><p>Doorstep pickup, drop-off centers, and corporate bulk programs consolidate e-waste from across the region.</p></div></div>
+      <div class="cycle-step"><div class="cycle-step-num">02 ●</div><div class="cycle-step-content"><h4>Intelligent Sorting</h4><p>ML vision systems classify devices by category, hazard level, material composition, and optimal recycling pathway.</p></div></div>
+      <div class="cycle-step"><div class="cycle-step-num">03 ●</div><div class="cycle-step-content"><h4>Material Recovery</h4><p>Gold, copper, lithium, cobalt, and rare earth metals are extracted and sold back into manufacturing supply chains.</p></div></div>
+      <div class="cycle-step"><div class="cycle-step-num">04 ●</div><div class="cycle-step-content"><h4>Circular Re-entry</h4><p>Recovered materials re-enter production. Functional components are refurbished and redistributed — extending product life by 3–7 years.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="action-section" id="schedule">
+  <div class="section-label">Action</div>
+  <h2 class="section-title">Recycle Now</h2>
+  <div class="action-grid">
+    <div class="action-panel">
+      <h3>AI Device Scanner</h3>
+      <p>Upload a photo of your device. Our ML model detects the type, estimates material composition, recyclability score, and the best disposal stream for it.</p>
+      <div class="drop-zone" id="dropZone" onclick="triggerScan()">
+        <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="runMLScan(event)">
+        <div class="drop-icon">📷</div>
+        <div class="drop-text"><span>Click to upload</span> or drag & drop a device photo</div>
+      </div>
+      <div class="progress-wrap" id="progressWrap">
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="progress-label" id="progressLabel">Initializing...</div>
+      </div>
+      <div class="result-box" id="resultBox">Awaiting device scan...</div>
+    </div>
+    <div class="action-panel">
+      <h3>Schedule Pickup</h3>
+      <p>Book a free doorstep e-waste collection. We cover all areas in Pune & Pimpri-Chinchwad. Receive a confirmation and tracking reference instantly.</p>
+      <div class="form-group"><label class="form-label">Your Name</label><input class="form-input" id="nameInput" placeholder="Full name"></div>
+      <div class="form-group"><label class="form-label">Address</label><input class="form-input" id="addressInput" placeholder="Sector / Area / Flat no."></div>
+      <div class="form-group"><label class="form-label">Device Category</label>
+        <select class="form-select" id="categorySelect">
+          <option value="">Select category</option>
+          <option>Mobile Devices</option><option>Computers / Laptops</option>
+          <option>Displays / TVs</option><option>Batteries</option>
+          <option>Printers / Peripherals</option><option>Mixed / Multiple Categories</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Preferred Pickup Date</label><input class="form-input" id="dateInput" type="date"></div>
+      <button class="btn-primary" onclick="bookPickup()" style="width:100%;margin-top:8px">Confirm Pickup</button>
+    </div>
+  </div>
+</section>
+
+<section class="market-section" id="market">
+  <div class="section-label">Live Market Data</div>
+  <h2 class="section-title">Recovered Material<br>Market Rates</h2>
+  <p style="color:var(--muted);font-size:12px;max-width:520px;line-height:1.9;margin-top:6px">E-waste contains real economic value. These are current approximate market rates for materials extracted from recycled electronics — demonstrating why proper recycling is both environmentally and economically vital.</p>
+  <div class="market-grid">
+    <div class="market-card">
+      <div class="market-material">Gold</div>
+      <div class="market-symbol">AU · EXTRACTED FROM PCBs & CONTACTS</div>
+      <div class="market-price" style="color:var(--accent3)">₹6,840</div>
+      <div class="market-unit">PER GRAM (APPROX)</div>
+      <span class="market-change change-up">▲ +2.3%</span>
+      <div class="market-sparkline"><svg id="sparkGold" viewBox="0 0 120 36" preserveAspectRatio="none"></svg></div>
+    </div>
+    <div class="market-card">
+      <div class="market-material">Copper</div>
+      <div class="market-symbol">CU · FROM WIRING & CIRCUIT BOARDS</div>
+      <div class="market-price" style="color:var(--accent2)">₹890</div>
+      <div class="market-unit">PER KG</div>
+      <span class="market-change change-up">▲ +1.1%</span>
+      <div class="market-sparkline"><svg id="sparkCopper" viewBox="0 0 120 36" preserveAspectRatio="none"></svg></div>
+    </div>
+    <div class="market-card">
+      <div class="market-material">Lithium</div>
+      <div class="market-symbol">LI · BATTERY CATHODES</div>
+      <div class="market-price" style="color:var(--teal)">₹1,240</div>
+      <div class="market-unit">PER KG (BATTERY-GRADE)</div>
+      <span class="market-change change-down">▼ -0.8%</span>
+      <div class="market-sparkline"><svg id="sparkLithium" viewBox="0 0 120 36" preserveAspectRatio="none"></svg></div>
+    </div>
+    <div class="market-card">
+      <div class="market-material">Cobalt</div>
+      <div class="market-symbol">CO · LI-ION BATTERY CATHODES</div>
+      <div class="market-price" style="color:var(--accent)">₹3,380</div>
+      <div class="market-unit">PER KG</div>
+      <span class="market-change change-up">▲ +3.7%</span>
+      <div class="market-sparkline"><svg id="sparkCobalt" viewBox="0 0 120 36" preserveAspectRatio="none"></svg></div>
+    </div>
+  </div>
+</section>
+
+<section class="impact-section" id="impact">
+  <div class="section-label">Our Impact</div>
+  <h2 class="section-title">Numbers That<br>Matter</h2>
+  <div class="impact-counters">
+    <div class="counter-cell"><div class="counter-value" id="c1" data-target="2847">0</div><div class="counter-label">Tonnes Collected</div></div>
+    <div class="counter-cell"><div class="counter-value" id="c2" data-target="142680">0</div><div class="counter-label">Devices Recycled</div></div>
+    <div class="counter-cell"><div class="counter-value" id="c3" data-target="98">0</div><div class="counter-label">% Landfill Diversion</div></div>
+    <div class="counter-cell"><div class="counter-value" id="c4" data-target="63">0</div><div class="counter-label">Collection Centers</div></div>
+  </div>
+</section>
+
+<section class="map-section" id="centers">
+  <div class="section-label">Drop-Off Network</div>
+  <h2 class="section-title">Collection Centers<br>Near You</h2>
+  <div class="map-container">
+    <div class="map-placeholder">
+      <div class="map-dots">
+        <div class="location-dot" style="left:22%;top:38%"></div>
+        <div class="map-label" style="left:22%;top:44%">Pimpri Hub</div>
+        <div class="location-dot" style="left:45%;top:30%"></div>
+        <div class="map-label" style="left:45%;top:36%">Chinchwad Center</div>
+        <div class="location-dot" style="left:60%;top:55%"></div>
+        <div class="map-label" style="left:60%;top:61%">Pune Central</div>
+        <div class="location-dot" style="left:75%;top:42%"></div>
+        <div class="map-label" style="left:75%;top:48%">Kothrud Drop</div>
+        <div class="location-dot" style="left:35%;top:68%"></div>
+        <div class="map-label" style="left:35%;top:74%">Hadapsar Unit</div>
+      </div>
+      <svg width="100%" height="100%" style="position:absolute;inset:0;opacity:0.12">
+        <defs><pattern id="g" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="#f5a623" stroke-width="0.5"/></pattern></defs>
+        <rect width="100%" height="100%" fill="url(#g)"/>
+      </svg>
+      <button class="btn-primary" onclick="openMap()" style="position:relative;z-index:10">View Full Map →</button>
+    </div>
+    <div class="map-info-bar">
+      <div class="map-info-item">Nearest: <span>Pimpri Collection Hub — 1.2 km</span></div>
+      <div class="map-info-item">Open: <span>Mon–Sat 8am–7pm</span></div>
+      <div class="map-info-item">Accepts: <span>All device categories</span></div>
+      <div class="map-info-item">Status: <span style="color:var(--teal)">● Open Now</span></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-brand">
+    <div class="logo"><div class="logo-icon">♻</div>EcoCycle</div>
+    <p>India's most advanced e-waste management platform. Turning yesterday's electronics into tomorrow's resources.</p>
+  </div>
+  <div class="footer-col">
+    <h4>Platform</h4>
+    <a href="#">Schedule Pickup</a>
+    <a href="#">Drop-off Centers</a>
+    <a href="#">AI Scanner</a>
+    <a href="#">Track Request</a>
+    <a href="#">Data Wipe Cert</a>
+  </div>
+  <div class="footer-col">
+    <h4>Learn</h4>
+    <a href="#">E-Waste Guide</a>
+    <a href="#">Hazard Database</a>
+    <a href="#">Circular Economy</a>
+    <a href="#">Impact Reports</a>
+    <a href="#">CPCB Guidelines</a>
+  </div>
+  <div class="footer-col">
+    <h4>Company</h4>
+    <a href="#">About Us</a>
+    <a href="#">Partners</a>
+    <a href="#">Careers</a>
+    <a href="#">Contact</a>
+    <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--border)">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;color:var(--text);margin-bottom:12px;letter-spacing:1px;text-transform:uppercase">Project By</div>
+      <div style="color:var(--accent);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;">Neel Patil</div>
+      <a href="tel:7387652309" style="color:var(--muted);font-size:10px;margin-top:2px;margin-bottom:8px;display:block">📞 7387652309</a>
+      <div style="color:var(--accent);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;">Sharvil Adavale</div>
+      <a href="tel:9021751360" style="color:var(--muted);font-size:10px;margin-top:2px;margin-bottom:8px;display:block">📞 9021751360</a>
+      <div style="color:var(--accent);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;">Ishaan Mungade</div>
+      <a href="tel:9284142449" style="color:var(--muted);font-size:10px;margin-top:2px;margin-bottom:8px;display:block">📞 9284142449</a>
+      <div style="color:var(--accent);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;">Rasika Arote</div>
+      <a href="tel:8767487164" style="color:var(--muted);font-size:10px;margin-top:2px;display:block">📞 8767487164</a>
+    </div>
+  </div>
+</footer>
+
+<div class="footer-bottom">
+  <span>© 2026 EcoCycle — E-Waste Management Platform</span>
+  <span>Pimpri-Chinchwad, Maharashtra, India</span>
+</div>
+
+<div class="notification" id="notification">
+  <div class="notif-title" id="notifTitle">Success!</div>
+  <div class="notif-msg" id="notifMsg">Your request has been processed.</div>
+</div>
+
+<script>
+const cursor=document.getElementById('cursor'),ring=document.getElementById('cursorRing');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;});
+function animateCursor(){
+  cursor.style.left=mx-5+'px';cursor.style.top=my-5+'px';
+  rx+=(mx-rx)*.12;ry+=(my-ry)*.12;
+  ring.style.left=rx-17+'px';ring.style.top=ry-17+'px';
+  requestAnimationFrame(animateCursor);
+}
+animateCursor();
+
+function animateNum(el,target,suffix=''){
+  let val=0;const step=target/60;
+  const iv=setInterval(()=>{val=Math.min(val+step,target);el.textContent=Math.floor(val).toLocaleString()+suffix;if(val>=target)clearInterval(iv);},20);
+}
+setTimeout(()=>{
+  animateNum(document.getElementById('heroStat1'),2847);
+  animateNum(document.getElementById('heroStat2'),142680);
+  animateNum(document.getElementById('heroStat3'),63);
+},600);
+
+const counters=document.querySelectorAll('.counter-value[data-target]');
+const observed=new Set();
+const obs=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting&&!observed.has(e.target)){
+      observed.add(e.target);
+      const t=parseInt(e.target.dataset.target);
+      animateNum(e.target,t,e.target.id==='c3'?'%':'');
+    }
+  });
+},{threshold:.3});
+counters.forEach(c=>obs.observe(c));
+
+const hObs=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting) e.target.querySelectorAll('.hazard-bar-fill[data-w]').forEach(b=>{b.style.width=b.dataset.w+'%';});
+  });
+},{threshold:.2});
+document.querySelectorAll('.hazard-card').forEach(c=>hObs.observe(c));
+
+function showNotif(title,msg){
+  const n=document.getElementById('notification');
+  document.getElementById('notifTitle').textContent=title;
+  document.getElementById('notifMsg').textContent=msg;
+  n.classList.add('show');setTimeout(()=>n.classList.remove('show'),4000);
+}
+function scrollToSection(id){document.getElementById(id).scrollIntoView({behavior:'smooth'});}
+
+function triggerScan(){document.getElementById('fileInput').click();}
+function runMLScan(event){
+  const file=event.target.files[0];if(!file)return;
+  const pw=document.getElementById('progressWrap'),pf=document.getElementById('progressFill'),
+        pl=document.getElementById('progressLabel'),rb=document.getElementById('resultBox');
+  pw.style.display='block';rb.innerHTML='';
+  const steps=[[10,'Loading image...'],[30,'Extracting features...'],[55,'Running classifier...'],[75,'Analyzing materials...'],[90,'Calculating recyclability...'],[100,'Complete!']];
+  let i=0;
+  const cats=['Laptop','Smartphone','Battery Pack','Monitor','Printer','Circuit Board'];
+  const mats=['Aluminum (34%), Copper (18%), Lithium (8%)','Gold (0.03g), Cobalt, Glass (42%)','Lithium, Nickel, Manganese','Glass, Indium, Copper wiring'];
+  const dc=cats[Math.floor(Math.random()*cats.length)];
+  const dm=mats[Math.floor(Math.random()*mats.length)];
+  const sc=Math.floor(Math.random()*20)+78;
+  function next(){
+    if(i<steps.length){pf.style.width=steps[i][0]+'%';pl.textContent=steps[i][1];i++;setTimeout(next,350);}
+    else{
+      pw.style.display='none';
+      rb.innerHTML=`<div style="text-align:left;width:100%">
+        <div style="color:var(--accent);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;letter-spacing:1px;margin-bottom:12px">✓ CLASSIFICATION COMPLETE</div>
+        <div style="margin-bottom:7px"><span style="color:var(--muted)">Device:</span> <span>${dc}</span></div>
+        <div style="margin-bottom:7px"><span style="color:var(--muted)">Materials:</span> <span style="font-size:10px">${dm}</span></div>
+        <div style="margin-bottom:7px"><span style="color:var(--muted)">Recyclability:</span> <span style="color:var(--accent);font-weight:700">${sc}/100</span></div>
+        <div style="margin-bottom:7px"><span style="color:var(--muted)">Disposal:</span> <span style="color:var(--accent2)">Certified Recycler Required</span></div>
+        <div style="margin-top:10px;padding:8px;background:rgba(245,166,35,.06);border-left:2px solid var(--accent);font-size:10px;color:var(--muted)">↗ Drop at nearest center or schedule doorstep pickup</div>
+      </div>`;
+      showNotif('Scan Complete!',`${dc} detected — recyclability: ${sc}/100`);
+    }
+  }
+  next();
+}
+const dz=document.getElementById('dropZone');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.style.borderColor='var(--accent)';});
+dz.addEventListener('dragleave',()=>{dz.style.borderColor='';});
+dz.addEventListener('drop',e=>{e.preventDefault();dz.style.borderColor='';if(e.dataTransfer.files.length)runMLScan({target:{files:e.dataTransfer.files}});});
+
+function bookPickup(){
+  const name=document.getElementById('nameInput').value.trim();
+  const addr=document.getElementById('addressInput').value.trim();
+  const cat=document.getElementById('categorySelect').value;
+  const date=document.getElementById('dateInput').value;
+  if(!name||!addr||!cat||!date){showNotif('Missing Details','Please fill all fields.');return;}
+  const fmt=new Date(date).toLocaleDateString('en-IN',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  showNotif('Pickup Booked! ✓',`${cat} pickup confirmed for ${fmt}. Ref: #EC${Math.floor(Math.random()*90000+10000)}`);
+  ['nameInput','addressInput','categorySelect','dateInput'].forEach(id=>document.getElementById(id).value='');
+}
+function openMap(){showNotif('Opening Map','Redirecting to full interactive collection center map...');}
+const di=document.getElementById('dateInput');
+if(di){const td=new Date();td.setDate(td.getDate()+1);di.min=td.toISOString().split('T')[0];}
+
+const deviceData={
+  smartphone:{label:'Smartphone',co2:70,energy:120,water:1500,weight:.18,icon:'📱'},
+  laptop:{label:'Laptop',co2:316,energy:480,water:3200,weight:2.5,icon:'💻'},
+  monitor:{label:'Monitor',co2:220,energy:360,water:2100,weight:8,icon:'🖥'},
+  printer:{label:'Printer',co2:145,energy:220,water:1400,weight:6,icon:'🖨'},
+  battery:{label:'Battery',co2:55,energy:90,water:800,weight:.5,icon:'🔋'},
+  tablet:{label:'Tablet',co2:95,energy:160,water:1800,weight:.6,icon:'📟'},
+  tv:{label:'TV/CRT',co2:410,energy:680,water:4200,weight:18,icon:'📺'},
+  router:{label:'Router',co2:42,energy:70,water:600,weight:.3,icon:'📡'}
+};
+const deviceQtys={};
+function toggleDevice(btn){
+  const d=btn.dataset.device;btn.classList.toggle('active');
+  if(btn.classList.contains('active')){deviceQtys[d]=1;addQtyRow(d);}
+  else{delete deviceQtys[d];const r=document.getElementById('qrow-'+d);if(r)r.remove();}
+  updateCalc();
+}
+function addQtyRow(d){
+  const info=deviceData[d];
+  const row=document.createElement('div');
+  row.className='qty-row';row.id='qrow-'+d;
+  row.innerHTML=`<span class="qty-label">${info.icon} ${info.label}</span>
+    <div class="qty-ctrl">
+      <button class="qty-btn" onclick="changeQty('${d}',-1)">−</button>
+      <div class="qty-num" id="qn-${d}">1</div>
+      <button class="qty-btn" onclick="changeQty('${d}',1)">+</button>
+    </div>`;
+  document.getElementById('qtyRows').appendChild(row);
+}
+function changeQty(d,delta){
+  deviceQtys[d]=Math.max(1,(deviceQtys[d]||1)+delta);
+  document.getElementById('qn-'+d).textContent=deviceQtys[d];updateCalc();
+}
+function updateCalc(){
+  let co2=0,energy=0,water=0,landfill=0;
+  for(const[d,qty]of Object.entries(deviceQtys)){
+    const info=deviceData[d];co2+=info.co2*qty;energy+=info.energy*qty;water+=info.water*qty;landfill+=info.weight*qty;
+  }
+  document.getElementById('calcCO2').textContent=co2.toLocaleString();
+  document.getElementById('calcEnergy').textContent=energy.toLocaleString();
+  document.getElementById('calcDays').textContent=Math.round(energy/9.5);
+  document.getElementById('calcWater').textContent=water.toLocaleString();
+  document.getElementById('calcLandfill').textContent=landfill.toFixed(1);
+}
+
+function generateCert(){
+  const name=document.getElementById('wipeNameInput').value.trim();
+  const serial=document.getElementById('wipeSerialInput').value.trim();
+  const device=document.getElementById('wipeDeviceInput').value;
+  if(!name||!device){showNotif('Missing Details','Please enter your name and device type.');return;}
+  const certNum='ECW-'+Math.floor(Math.random()*900000+100000);
+  const now=new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('certNum').textContent=certNum;
+  document.getElementById('certName').textContent=name;
+  document.getElementById('certDevice').textContent=device;
+  document.getElementById('certSerial').textContent=serial||'Not Provided';
+  document.getElementById('certDate').textContent=now;
+  document.getElementById('certPreview').classList.add('visible');
+  showNotif('Certificate Generated!',`Data wipe cert ${certNum} issued for ${name}.`);
+}
+
+function drawSparkline(svgId,color,trend){
+  const svg=document.getElementById(svgId);
+  const pts=[];let y=18;
+  for(let i=0;i<12;i++){y+=trend+(Math.random()-.5)*7;y=Math.max(4,Math.min(32,y));pts.push(`${i*11},${y}`);}
+  const path=document.createElementNS('http://www.w3.org/2000/svg','polyline');
+  path.setAttribute('points',pts.join(' '));
+  path.setAttribute('fill','none');path.setAttribute('stroke',color);
+  path.setAttribute('stroke-width','1.5');path.setAttribute('stroke-linecap','round');path.setAttribute('stroke-linejoin','round');
+  svg.appendChild(path);
+}
+drawSparkline('sparkGold','#ffd166',-0.5);
+drawSparkline('sparkCopper','#e8450a',-0.3);
+drawSparkline('sparkLithium','#2ec4b6',0.3);
+drawSparkline('sparkCobalt','#f5a623',-0.8);
+</script>
+</body>
+</html>
